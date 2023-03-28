@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= it.title %></title>
+
+</head>
+
+<body>
+  <%~ includeFile('partials/header', { links: it.links}) %>
+
+  <h1><%= it.title %></h1>
+  <%~ it.content  %>
+</body>
+
+</html>
