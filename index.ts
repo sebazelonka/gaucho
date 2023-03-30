@@ -1,4 +1,4 @@
-import { etaConfig, extract, renderFile, renderMarkdown } from "./deps.ts";
+import { ensureDir, extract, renderMarkdown } from "./deps.ts";
 import { folders, header } from "./config/index.ts";
 import { Handlebars } from "https://deno.land/x/handlebars@v0.9.0/mod.ts";
 
@@ -14,8 +14,6 @@ const handle = new Handlebars({
   helpers: undefined,
   compilerOptions: undefined,
 });
-
-etaConfig({ views: templatesDir });
 
 const paths: { file: string; link: string }[] = [];
 
@@ -51,8 +49,17 @@ const posts = async () => {
 
     const outputPath = `${outputDir}/posts/${post.link}`;
 
-    await Deno.mkdir(`${outputDir}/posts`, { recursive: true });
-    await Deno.writeTextFile(outputPath, html);
+    ensureDir(`${outputDir}/posts`);
+
+    try {
+      await Deno.writeTextFile(outputPath, html, { createNew: true });
+    } catch (error) {
+      if (error instanceof Deno.errors.AlreadyExists) {
+        console.log("⚠️", "File already exists:", outputPath);
+      } else {
+        throw error;
+      }
+    }
   });
 };
 
