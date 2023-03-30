@@ -35,7 +35,7 @@ const posts = async () => {
     const decoder = new TextDecoder("utf-8");
 
     const content = decoder.decode(
-      Deno.readFileSync(`${postsDir}/${post.file}`)
+      await Deno.readFile(`${postsDir}/${post.file}`)
     );
 
     // read metadata and content on each file
