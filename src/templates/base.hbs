@@ -9,10 +9,10 @@
 </head>
 
 <body>
-  <%~ includeFile('partials/header', { links: it.links}) %>
+  {{>header header=header}}
+  <h1>{{title}}</h1>
 
-  <h1><%= it.title %></h1>
-  <%~ it.content  %>
+  {{{content}}}
 </body>
 
 </html>

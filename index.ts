@@ -1,7 +1,19 @@
 import { etaConfig, extract, renderFile, renderMarkdown } from "./deps.ts";
-import { folders } from "./config/index.ts";
+import { folders, header } from "./config/index.ts";
+import { Handlebars } from "https://deno.land/x/handlebars@v0.9.0/mod.ts";
 
 const { postsDir, templatesDir, outputDir } = folders;
+
+const handle = new Handlebars({
+  baseDir: templatesDir,
+  extname: ".hbs",
+  layoutsDir: "/",
+  partialsDir: "partials/",
+  cachePartials: true,
+  defaultLayout: "base",
+  helpers: undefined,
+  compilerOptions: undefined,
+});
 
 etaConfig({ views: templatesDir });
 
@@ -31,10 +43,10 @@ const posts = async () => {
     const markup = renderMarkdown(body);
 
     // put that inside a template
-    const html = await renderFile(`/base.eta`, {
+    const html = await handle.renderView(`base`, {
       title: attrs.title,
       content: markup,
-      links: { postLink: post.link },
+      header: header,
     });
 
     const outputPath = `${outputDir}/posts/${post.link}`;
