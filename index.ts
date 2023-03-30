@@ -1,37 +1,50 @@
-import { configure, extract, renderFile, renderMarkdown } from "./deps.ts";
+import { etaConfig, extract, renderFile, renderMarkdown } from "./deps.ts";
+import { folders } from "./config/index.ts";
 
-const postsDir = "./posts";
-const templatesDir = "./templates";
-const outputDir = "./dist";
+const { postsDir, templatesDir, outputDir } = folders;
 
-configure({ views: templatesDir });
+etaConfig({ views: templatesDir });
 
-// read all files on postsDir
-for await (const file of Deno.readDir(postsDir)) {
-  const decoder = new TextDecoder("utf-8");
+const paths: { file: string; link: string }[] = [];
 
-  const doc = file.name;
-  const content = decoder.decode(await Deno.readFile(`./posts/${doc}`));
+const getPosts = async () => {
+  // read all files on postsDir
+  for await (const file of Deno.readDir(postsDir)) {
+    // generate the html name
+    const link = file.name.split(".")[0] + ".html";
 
-  // read metadata and content on each file
-  const { body, attrs } = extract(content);
+    paths.push({ file: file.name, link });
+  }
+};
 
-  const markup = renderMarkdown(body);
+const posts = async () => {
+  await getPosts();
+  paths.map(async (post) => {
+    const decoder = new TextDecoder("utf-8");
 
-  const outputFilename = `${doc}.html`;
+    const content = decoder.decode(
+      Deno.readFileSync(`${postsDir}/${post.file}`)
+    );
 
-  // put that inside a layout
-  const html = await renderFile(`/base.eta`, {
-    title: attrs.title,
-    content: markup,
-    links: { postLink: outputFilename },
+    // read metadata and content on each file
+    const { body, attrs } = extract(content);
+    const markup = renderMarkdown(body);
+
+    // put that inside a template
+    const html = await renderFile(`/base.eta`, {
+      title: attrs.title,
+      content: markup,
+      links: { postLink: post.link },
+    });
+
+    const outputPath = `${outputDir}/posts/${post.link}`;
+
+    await Deno.mkdir(`${outputDir}/posts`, { recursive: true });
+    await Deno.writeTextFile(outputPath, html);
   });
+};
 
-  const outputPath = `${outputDir}/posts/${outputFilename}`;
-
-  await Deno.mkdir(`${outputDir}/posts`, { recursive: true });
-  await Deno.writeTextFile(outputPath, html);
-}
+posts();
 
 // generate posts list to be used inside index
 // generate other pages (about, blog, etc)
